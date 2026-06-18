@@ -82,6 +82,24 @@ tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
 
 .tab-content { display: none; }
 .tab-content.active { display: block; }
+
+/* Popup overlay */
+.overlay { position: fixed; inset: 0; background: rgba(0,0,0,0.55); z-index: 1000; display: flex; align-items: center; justify-content: center; padding: 1rem; }
+.popup { background: white; border-radius: 16px; max-width: 480px; width: 100%; padding: 2rem; box-shadow: 0 20px 60px rgba(0,0,0,0.25); }
+.popup-icon { font-size: 36px; margin-bottom: 12px; }
+.popup h2 { font-size: 18px; font-weight: 700; color: #1a1a1a; margin-bottom: 10px; }
+.popup p { font-size: 14px; color: #4a5568; line-height: 1.7; margin-bottom: 10px; }
+.popup .highlight { background: #ebf4ff; border-left: 3px solid #003189; border-radius: 0 6px 6px 0; padding: 10px 14px; font-size: 13px; color: #2b6cb0; margin: 14px 0; }
+.popup-btn { width: 100%; padding: 13px; background: #003189; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 600; cursor: pointer; margin-top: 6px; }
+.popup-btn:hover { background: #002470; }
+
+/* Footer */
+.site-footer { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem 2rem; border-top: 1px solid #e2e8f0; }
+.footer-rgpd { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 1rem 1.25rem; font-size: 13px; color: #718096; line-height: 1.7; }
+.footer-rgpd strong { color: #4a5568; }
+.footer-rgpd .rgpd-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.footer-rgpd .chip { background: white; border: 1px solid #e2e8f0; border-radius: 20px; padding: 4px 12px; font-size: 12px; color: #4a5568; display: flex; align-items: center; gap: 5px; }
+.footer-copy { text-align: center; font-size: 12px; color: #a0aec0; margin-top: 14px; }
 </style>
 </head>
 <body>
@@ -95,11 +113,28 @@ tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
     </div>
   </div>
 
+  <!-- Popup bénévole -->
+  <div class="overlay" id="popup-overlay">
+    <div class="popup">
+      <div class="popup-icon">🤝</div>
+      <h2>Site bénévole — quelques précisions</h2>
+      <p>Ce simulateur a été créé <strong>bénévolement</strong> pour aider les postiers à mieux comprendre leurs droits ASC.</p>
+      <p>Il <strong>NE REMPLACE PAS</strong> les documents officiels du CSE Central et peut comporter des imprécisions. En cas de doute, consultez toujours la brochure officielle ou contactez le CSE.</p>
+      <div class="highlight">
+        🔒 <strong>Vos données restent sur votre appareil.</strong><br>
+        Aucune information personnelle n'est collectée, stockée ou transmise. Tous les calculs sont effectués localement dans votre navigateur.
+      </div>
+      <p style="font-size:13px; color:#a0aec0;">Ce site n'est pas affilié à La Poste ni au CSE Central. Les montants affichés sont des estimations basées sur la brochure ASC 2026.</p>
+      <button class="popup-btn" onclick="closePopup()">J'ai compris et j'accéde au simulateur →</button>
+    </div>
+  </div>
+
   <div class="tab-bar">
     <div class="tab active" onclick="showTab('profil')">📋 Mon profil</div>
     <div class="tab" onclick="showTab('resultats')">💶 Mes aides</div>
     <div class="tab" onclick="showTab('tableau')">📊 Tableau complet</div>
     <div class="tab" onclick="showTab('contacts')">📞 Contacts</div>
+    
   </div>
 
   <!-- PROFIL -->
@@ -111,20 +146,20 @@ tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
         <div class="field">
           <label>Revenu Fiscal de Référence (€)</label>
           <input type="number" id="rfr" placeholder="ex : 30 000" oninput="updateQF()" />
-          <div class="hint">Sur votre avis d'imposition N-1</div>
+          <div class="hint">c'est sur votre avis d'imposition N-1</div>
         </div>
         <div class="field">
           <label>Nombre de parts fiscales</label>
           <input type="number" id="parts" placeholder="ex : 2.5" step="0.5" min="0.5" oninput="updateQF()" />
-          <div class="hint">Sur votre avis d'imposition N-1</div>
+          <div class="hint">c'est AUSSI sur votre avis d'imposition N-1</div>
         </div>
       </div>
       <div class="field" style="margin-top:12px">
-        <label>Majorations +0,5 part (cumulables)</label>
+        <label>Majorations de +0,5 part (elles sont cumulables) si vous êtes</label>
         <div class="checkbox-group" style="margin-top:6px">
           <label class="cb-item"><input type="checkbox" id="boe" onchange="updateQF()" /> Bénéficiaire BOE (handicap)</label>
           <label class="cb-item"><input type="checkbox" id="parent_isole" onchange="updateQF()" /> Parent isolé (mention T)</label>
-          <label class="cb-item"><input type="checkbox" id="aidant_parts" onchange="updateQF()" /> Certificat d'aidant</label>
+          <label class="cb-item"><input type="checkbox" id="aidant_parts" onchange="updateQF()" /> Aidant familial</label>
         </div>
       </div>
       <div id="qf-result"></div>
@@ -152,38 +187,38 @@ tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
     </div>
 
     <div class="section">
-      <div class="section-title">Mes enfants</div>
+      <div class="section-title">Ma progéniture</div>
       <div class="grid2">
         <div class="field">
-          <label>Enfants de 0 à 4 ans</label>
+          <label>Enfant(s) de 0 à 4 ans</label>
           <input type="number" id="enf04" value="0" min="0" oninput="updateQF()" />
         </div>
         <div class="field">
-          <label>Enfants de 4 à 11 ans</label>
+          <label>Enfant(s) de 4 à 11 ans</label>
           <input type="number" id="enf411" value="0" min="0" oninput="updateQF()" />
         </div>
         <div class="field">
-          <label>Enfants au primaire</label>
+          <label>Enfant(s) en primaire</label>
           <input type="number" id="primaire" value="0" min="0" oninput="updateQF()" />
         </div>
         <div class="field">
-          <label>Enfants au collège</label>
+          <label>Enfant(s) au collège</label>
           <input type="number" id="college" value="0" min="0" oninput="updateQF()" />
         </div>
         <div class="field">
-          <label>Enfants au lycée</label>
+          <label>Enfant(s) au lycée</label>
           <input type="number" id="lycee" value="0" min="0" oninput="updateQF()" />
         </div>
         <div class="field">
-          <label>Étudiants (QF ≤ 10 100 €)</label>
+          <label>Étudiant-e(s) (si tranche QF ≤ 10 100 €)</label>
           <input type="number" id="etudiant" value="0" min="0" oninput="updateQF()" />
         </div>
         <div class="field">
-          <label>Enfants handicapés (&lt; 20 ans)</label>
+          <label>Enfant(s) handicapé-e(s) (&lt; 20 ans)</label>
           <input type="number" id="enf_handi" value="0" min="0" oninput="updateQF()" />
         </div>
         <div class="field">
-          <label>Enfants partant en colo (4-17 ans)</label>
+          <label>Enfant(s) partant en colo (4-17 ans)</label>
           <input type="number" id="colo" value="0" min="0" oninput="updateQF()" />
         </div>
       </div>
@@ -193,7 +228,7 @@ tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
           <input type="number" id="j_colo" value="0" min="0" oninput="updateQF()" />
         </div>
         <div class="field">
-          <label>Jours de vacances en famille (max 45)</label>
+          <label>Jours de vacances des enfants en dehors de la maison (sur facture et pour un max de 45j/enfant/an)</label>
           <input type="number" id="j_vacances" value="0" min="0" max="45" oninput="updateQF()" />
         </div>
       </div>
@@ -270,7 +305,7 @@ tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
     </div>
 
     <div class="section">
-      <div class="section-title">Aide périscolarité (par mois et par enfant)</div>
+      <div class="section-title">Aide périscolarité (par mois et par enfant si l'offre CESUS n'a pas été choisie)</div>
       <div class="table-wrap">
         <table>
           <tr><th>Tranche</th><th>% facture</th><th>Max/mois</th></tr>
@@ -289,7 +324,7 @@ tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
     </div>
 
     <div class="section">
-      <div class="section-title">Chèques Vacances (abondement sur épargne max 1 200 €)</div>
+      <div class="section-title">Chèques Vacances (abondement sur épargne pour un max de 1 200 €/an/postier)</div>
       <div class="table-wrap">
         <table>
           <tr><th>Tranche</th><th>Abondement</th><th>Gain max</th></tr>
@@ -481,7 +516,36 @@ tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
 
 </div>
 
+<!-- Footer RGPD -->
+<footer class="site-footer">
+  <div class="footer-rgpd">
+    <strong>🔒 Confidentialité & RGPD</strong><br>
+    Ce simulateur respecte votre vie privée. Aucune donnée personnelle n'est collectée, transmise ou stockée sur un serveur. Tous les calculs (RFR, parts fiscales, situation familiale) sont réalisés <strong>exclusivement dans votre navigateur</strong>, en local, et disparaissent dès que vous fermez la page.
+    <div class="rgpd-chips">
+      <span class="chip">✅ Zéro cookie</span>
+      <span class="chip">✅ Zéro tracking</span>
+      <span class="chip">✅ Calculs 100% locaux</span>
+      <span class="chip">✅ Aucun serveur</span>
+      <span class="chip">✅ Open source</span>
+    </div>
+  </div>
+  <div class="footer-copy">Site bénévole — non affilié à La Poste ni au CSE Central · Données brochure ASC 2026 · <a href="#" onclick="document.getElementById('popup-overlay').style.display='flex'; return false;">Mentions légales</a></div>
+</footer>
+
 <script>
+const EXTERNAL_URL = 'VOTRE_URL_ICI';
+
+function closePopup() {
+  document.getElementById('popup-overlay').style.display = 'none';
+}
+
+function openExternalPage() {
+  if(EXTERNAL_URL === 'VOTRE_URL_ICI') {
+    alert('URL de la page exemples non configurée — remplacez VOTRE_URL_ICI dans le code source.');
+    return;
+  }
+  window.open(EXTERNAL_URL, '_blank');
+}
 const QF_TRANCHES = [7900,10100,12000,13900,15500,17600,19700,22500,27400,Infinity];
 
 function getTranche(qf) {
