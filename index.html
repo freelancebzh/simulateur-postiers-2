@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Simulateur ASC 2026 — CSE Central La Poste</title>
+<style>
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f4f6f9; color: #1a1a1a; font-size: 15px; line-height: 1.5; }
+a { color: #003189; }
+
+.page { max-width: 720px; margin: 0 auto; padding: 1.5rem 1rem 4rem; }
+
+.header { background: #003189; color: white; border-radius: 12px; padding: 1.5rem; margin-bottom: 1.5rem; display: flex; align-items: center; gap: 14px; }
+.header-logo { width: 48px; height: 48px; background: #FFD700; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; color: #003189; flex-shrink: 0; }
+.header h1 { font-size: 20px; font-weight: 600; }
+.header p { font-size: 13px; opacity: 0.8; margin-top: 3px; }
+
+.tab-bar { display: flex; gap: 6px; margin-bottom: 1rem; flex-wrap: wrap; }
+.tab { padding: 8px 16px; border-radius: 8px; border: 1px solid #cbd5e0; font-size: 14px; cursor: pointer; background: white; color: #333; transition: all 0.15s; }
+.tab:hover { border-color: #003189; color: #003189; }
+.tab.active { background: #003189; color: white; border-color: #003189; }
+
+.section { background: white; border: 1px solid #e2e8f0; border-radius: 12px; padding: 1.25rem; margin-bottom: 1rem; }
+.section-title { font-size: 12px; font-weight: 600; color: #718096; text-transform: uppercase; letter-spacing: 0.06em; margin-bottom: 1rem; }
+
+.grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media(max-width: 480px) { .grid2 { grid-template-columns: 1fr; } }
+
+.field { margin-bottom: 4px; }
+.field label { font-size: 14px; color: #2d3748; display: block; margin-bottom: 4px; font-weight: 500; }
+.field input[type="number"], .field select { width: 100%; padding: 8px 10px; border: 1px solid #cbd5e0; border-radius: 8px; font-size: 14px; background: white; color: #1a1a1a; transition: border 0.15s; }
+.field input[type="number"]:focus, .field select:focus { outline: none; border-color: #003189; box-shadow: 0 0 0 3px rgba(0,49,137,0.1); }
+.field .hint { font-size: 12px; color: #a0aec0; margin-top: 3px; }
+
+.checkbox-group { display: flex; flex-wrap: wrap; gap: 10px; }
+.cb-item { display: flex; align-items: center; gap: 7px; font-size: 14px; cursor: pointer; padding: 6px 10px; border: 1px solid #e2e8f0; border-radius: 8px; background: white; transition: all 0.15s; }
+.cb-item:hover { border-color: #003189; }
+.cb-item input { width: auto; accent-color: #003189; }
+
+.qf-badge { background: #ebf4ff; color: #003189; border-radius: 8px; padding: 8px 14px; font-size: 14px; font-weight: 600; display: inline-block; margin-top: 10px; border: 1px solid #bee3f8; }
+
+.btn-primary { width: 100%; padding: 13px; background: #003189; color: white; border: none; border-radius: 8px; font-size: 15px; font-weight: 500; cursor: pointer; margin-top: 6px; transition: background 0.15s; }
+.btn-primary:hover { background: #002470; }
+
+/* Results */
+.results { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
+.results-header { background: #003189; color: white; padding: 1rem 1.25rem; }
+.results-header h2 { font-size: 16px; font-weight: 600; }
+.results-header p { font-size: 13px; opacity: 0.8; margin-top: 2px; }
+
+.aid-cat { border-bottom: 1px solid #f0f4f8; }
+.aid-cat:last-of-type { border-bottom: none; }
+.aid-cat-title { font-size: 12px; font-weight: 600; color: #718096; text-transform: uppercase; letter-spacing: 0.05em; padding: 10px 1.25rem 6px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; }
+.aid-item { padding: 10px 1.25rem; border-top: 1px solid #f0f4f8; display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; }
+.aid-item:first-of-type { border-top: none; }
+.aid-name { font-size: 14px; color: #2d3748; font-weight: 500; }
+.aid-detail { font-size: 12px; color: #a0aec0; margin-top: 2px; }
+.aid-amount { font-size: 15px; font-weight: 600; color: #003189; white-space: nowrap; text-align: right; flex-shrink: 0; }
+.aid-amount.na { color: #a0aec0; font-size: 13px; font-weight: 400; }
+.aid-amount.free { color: #38a169; font-size: 13px; font-weight: 500; }
+
+.total-bar { background: #003189; color: white; padding: 1rem 1.25rem; display: flex; justify-content: space-between; align-items: center; }
+.total-bar .label { font-size: 14px; opacity: 0.9; }
+.total-bar .amount { font-size: 22px; font-weight: 700; }
+
+.disclaimer { font-size: 12px; color: #a0aec0; margin-top: 10px; padding: 0 2px; line-height: 1.6; }
+
+.no-results { padding: 2.5rem; text-align: center; color: #a0aec0; font-size: 14px; }
+.no-results strong { display: block; font-size: 16px; color: #718096; margin-bottom: 6px; }
+
+/* Table */
+.table-wrap { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { background: #f8fafc; text-align: left; padding: 8px 10px; border: 1px solid #e2e8f0; font-weight: 600; color: #718096; font-size: 12px; }
+td { padding: 7px 10px; border: 1px solid #e2e8f0; color: #2d3748; }
+tr:nth-child(even) td { background: #f8fafc; }
+tr.highlight td { background: #ebf4ff; font-weight: 600; color: #003189; }
+
+.contact-box { background: #ebf4ff; border: 1px solid #bee3f8; border-radius: 8px; padding: 1rem; margin-top: 1rem; font-size: 13px; color: #2b6cb0; }
+.contact-box strong { display: block; margin-bottom: 4px; font-size: 14px; }
+
+.tab-content { display: none; }
+.tab-content.active { display: block; }
+</style>
+</head>
+<body>
+<div class="page">
+
+  <div class="header">
+    <div class="header-logo">CSE</div>
+    <div>
+      <h1>Simulateur des aides ASC 2026</h1>
+      <p>CSE Central La Poste — Estimez vos aides personnalisées</p>
+    </div>
+  </div>
+
+  <div class="tab-bar">
+    <div class="tab active" onclick="showTab('profil')">📋 Mon profil</div>
+    <div class="tab" onclick="showTab('resultats')">💶 Mes aides</div>
+    <div class="tab" onclick="showTab('tableau')">📊 Tableau complet</div>
+    <div class="tab" onclick="showTab('contacts')">📞 Contacts</div>
+  </div>
+
+  <!-- PROFIL -->
+  <div id="tab-profil" class="tab-content active">
+
+    <div class="section">
+      <div class="section-title">Calcul du quotient familial (QF = RFR ÷ parts)</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Revenu Fiscal de Référence (€)</label>
+          <input type="number" id="rfr" placeholder="ex : 30 000" oninput="updateQF()" />
+          <div class="hint">Sur votre avis d'imposition N-1</div>
+        </div>
+        <div class="field">
+          <label>Nombre de parts fiscales</label>
+          <input type="number" id="parts" placeholder="ex : 2.5" step="0.5" min="0.5" oninput="updateQF()" />
+          <div class="hint">Sur votre avis d'imposition N-1</div>
+        </div>
+      </div>
+      <div class="field" style="margin-top:12px">
+        <label>Majorations +0,5 part (cumulables)</label>
+        <div class="checkbox-group" style="margin-top:6px">
+          <label class="cb-item"><input type="checkbox" id="boe" onchange="updateQF()" /> Bénéficiaire BOE (handicap)</label>
+          <label class="cb-item"><input type="checkbox" id="parent_isole" onchange="updateQF()" /> Parent isolé (mention T)</label>
+          <label class="cb-item"><input type="checkbox" id="aidant_parts" onchange="updateQF()" /> Certificat d'aidant</label>
+        </div>
+      </div>
+      <div id="qf-result"></div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Ma situation professionnelle</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Type de contrat</label>
+          <select id="contrat" onchange="updateQF()">
+            <option value="cdi">CDI / Fonctionnaire</option>
+            <option value="cdd">CDD</option>
+            <option value="retraite">Retraité(e)</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Ancienneté</label>
+          <select id="anciennete" onchange="updateQF()">
+            <option value="plus3">Plus de 3 ans</option>
+            <option value="moins3">Moins de 3 ans (nouvel entrant)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Mes enfants</div>
+      <div class="grid2">
+        <div class="field">
+          <label>Enfants de 0 à 4 ans</label>
+          <input type="number" id="enf04" value="0" min="0" oninput="updateQF()" />
+        </div>
+        <div class="field">
+          <label>Enfants de 4 à 11 ans</label>
+          <input type="number" id="enf411" value="0" min="0" oninput="updateQF()" />
+        </div>
+        <div class="field">
+          <label>Enfants au primaire</label>
+          <input type="number" id="primaire" value="0" min="0" oninput="updateQF()" />
+        </div>
+        <div class="field">
+          <label>Enfants au collège</label>
+          <input type="number" id="college" value="0" min="0" oninput="updateQF()" />
+        </div>
+        <div class="field">
+          <label>Enfants au lycée</label>
+          <input type="number" id="lycee" value="0" min="0" oninput="updateQF()" />
+        </div>
+        <div class="field">
+          <label>Étudiants (QF ≤ 10 100 €)</label>
+          <input type="number" id="etudiant" value="0" min="0" oninput="updateQF()" />
+        </div>
+        <div class="field">
+          <label>Enfants handicapés (&lt; 20 ans)</label>
+          <input type="number" id="enf_handi" value="0" min="0" oninput="updateQF()" />
+        </div>
+        <div class="field">
+          <label>Enfants partant en colo (4-17 ans)</label>
+          <input type="number" id="colo" value="0" min="0" oninput="updateQF()" />
+        </div>
+      </div>
+      <div class="grid2" style="margin-top:10px">
+        <div class="field">
+          <label>Jours de colo par enfant</label>
+          <input type="number" id="j_colo" value="0" min="0" oninput="updateQF()" />
+        </div>
+        <div class="field">
+          <label>Jours de vacances en famille (max 45)</label>
+          <input type="number" id="j_vacances" value="0" min="0" max="45" oninput="updateQF()" />
+        </div>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Situation aidant / handicap</div>
+      <div class="checkbox-group">
+        <label class="cb-item"><input type="checkbox" id="est_aidant" onchange="updateQF()" /> Je suis aidant familial (certificat)</label>
+        <label class="cb-item"><input type="checkbox" id="est_boe" onchange="updateQF()" /> Je suis en situation de handicap (BOE)</label>
+      </div>
+    </div>
+
+    <button class="btn-primary" onclick="showTab('resultats')">Calculer mes aides →</button>
+  </div>
+
+  <!-- RÉSULTATS -->
+  <div id="tab-resultats" class="tab-content">
+    <div id="results-container">
+      <div class="no-results"><strong>Renseignez votre profil</strong>Revenez à l'onglet "Mon profil" pour saisir vos informations.</div>
+    </div>
+  </div>
+
+  <!-- TABLEAU COMPLET -->
+  <div id="tab-tableau" class="tab-content">
+
+    <div class="section">
+      <div class="section-title">Grille des tranches de QF 2026</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>Quotient Familial</th></tr>
+          <tr><td><strong>T1</strong></td><td>≤ 7 900 €</td></tr>
+          <tr><td><strong>T2</strong></td><td>7 901 – 10 100 €</td></tr>
+          <tr><td><strong>T3</strong></td><td>10 101 – 12 000 €</td></tr>
+          <tr><td><strong>T4</strong></td><td>12 001 – 13 900 €</td></tr>
+          <tr><td><strong>T5</strong></td><td>13 901 – 15 500 €</td></tr>
+          <tr><td><strong>T6</strong></td><td>15 501 – 17 600 €</td></tr>
+          <tr><td><strong>T7</strong></td><td>17 601 – 19 700 €</td></tr>
+          <tr><td><strong>T8</strong></td><td>19 701 – 22 500 €</td></tr>
+          <tr><td><strong>T9</strong></td><td>22 501 – 27 400 €</td></tr>
+          <tr><td><strong>T10</strong></td><td>> 27 400 €</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Garde d'enfants (annuel)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>0-4 ans</th><th>4-11 ans</th></tr>
+          <tr><td>T1</td><td>1 092 €</td><td>715 €</td></tr>
+          <tr><td>T2</td><td>1 008 €</td><td>660 €</td></tr>
+          <tr><td>T3</td><td>924 €</td><td>605 €</td></tr>
+          <tr><td>T4</td><td>840 €</td><td>550 €</td></tr>
+          <tr><td>T5</td><td>756 €</td><td>495 €</td></tr>
+          <tr><td>T6</td><td>672 €</td><td>440 €</td></tr>
+          <tr><td>T7</td><td>588 €</td><td>385 €</td></tr>
+          <tr><td>T8</td><td>546 €</td><td>357 €</td></tr>
+          <tr><td>T9</td><td>504 €</td><td>330 €</td></tr>
+          <tr><td>T10</td><td>420 €</td><td>275 €</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Allocation scolarité (par enfant)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>Primaire</th><th>Collège</th><th>Lycée</th><th>Étudiant</th></tr>
+          <tr><td>T1 et T2</td><td>70 €</td><td>145 €</td><td>175 €</td><td>955 € (T1) / 870 € (T2)</td></tr>
+          <tr><td>T3 à T10</td><td colspan="4" style="color:#a0aec0">Non éligible</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Aide périscolarité (par mois et par enfant)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>% facture</th><th>Max/mois</th></tr>
+          <tr><td>T1</td><td>45%</td><td>45 €</td></tr>
+          <tr><td>T2</td><td>43%</td><td>43 €</td></tr>
+          <tr><td>T3</td><td>41%</td><td>41 €</td></tr>
+          <tr><td>T4</td><td>39%</td><td>39 €</td></tr>
+          <tr><td>T5</td><td>37%</td><td>37 €</td></tr>
+          <tr><td>T6</td><td>35%</td><td>35 €</td></tr>
+          <tr><td>T7</td><td>33%</td><td>33 €</td></tr>
+          <tr><td>T8</td><td>31%</td><td>31 €</td></tr>
+          <tr><td>T9</td><td>29%</td><td>29 €</td></tr>
+          <tr><td>T10</td><td>27%</td><td>27 €</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Chèques Vacances (abondement sur épargne max 1 200 €)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>Abondement</th><th>Gain max</th></tr>
+          <tr><td>T1</td><td>50%</td><td>600 €</td></tr>
+          <tr><td>T2</td><td>45%</td><td>540 €</td></tr>
+          <tr><td>T3</td><td>41%</td><td>492 €</td></tr>
+          <tr><td>T4</td><td>38%</td><td>456 €</td></tr>
+          <tr><td>T5</td><td>35%</td><td>420 €</td></tr>
+          <tr><td>T6</td><td>32%</td><td>384 €</td></tr>
+          <tr><td>T7</td><td>29%</td><td>348 €</td></tr>
+          <tr><td>T8</td><td>26%</td><td>312 €</td></tr>
+          <tr><td>T9</td><td>23%</td><td>276 €</td></tr>
+          <tr><td>T10</td><td>20%</td><td>240 €</td></tr>
+        </table>
+      </div>
+      <p style="font-size:12px;color:#a0aec0;margin-top:6px">+0,5% bonus pour les nouveaux entrants de moins de 3 ans</p>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Aide aux vacances timbrées (1 fois/an, min 7 nuits)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>Montant max</th><th>% aide</th></tr>
+          <tr><td>T1</td><td>650 €</td><td>55%</td></tr>
+          <tr><td>T2 & T3</td><td>600 €</td><td>50%</td></tr>
+          <tr><td>T4 & T5</td><td>500 €</td><td>45%</td></tr>
+          <tr><td>T6 & T7</td><td>400 €</td><td>40%</td></tr>
+          <tr><td>T8 & T9</td><td>300 €</td><td>35%</td></tr>
+          <tr><td>T10</td><td>200 €</td><td>30%</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Colonies de vacances (AVEA, UCPA, Totemia, Sea Voyages — max 1 300 €)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>% pris en charge</th></tr>
+          <tr><td>T1</td><td>85%</td></tr>
+          <tr><td>T2</td><td>78%</td></tr>
+          <tr><td>T3</td><td>75%</td></tr>
+          <tr><td>T4</td><td>71%</td></tr>
+          <tr><td>T5</td><td>69%</td></tr>
+          <tr><td>T6</td><td>67%</td></tr>
+          <tr><td>T7</td><td>65%</td></tr>
+          <tr><td>T8</td><td>63%</td></tr>
+          <tr><td>T9</td><td>61%</td></tr>
+          <tr><td>T10</td><td>59%</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Séjours enfants accompagnés (par jour, max 45 j/an)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>€/jour</th></tr>
+          <tr><td>T1</td><td>9,00 €</td></tr>
+          <tr><td>T2</td><td>8,80 €</td></tr>
+          <tr><td>T3</td><td>8,60 €</td></tr>
+          <tr><td>T4</td><td>8,40 €</td></tr>
+          <tr><td>T5</td><td>7,80 €</td></tr>
+          <tr><td>T6</td><td>7,50 €</td></tr>
+          <tr><td>T7</td><td>7,00 €</td></tr>
+          <tr><td>T8</td><td>5,00 €</td></tr>
+          <tr><td>T9</td><td>3,50 €</td></tr>
+          <tr><td>T10</td><td>3,30 €</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">CESU Vie quotidienne (50 titres/an de 15 €)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>Aide/titre</th><th>Total annuel</th></tr>
+          <tr><td>T1</td><td>13 €</td><td>650 €</td></tr>
+          <tr><td>T2</td><td>12 €</td><td>600 €</td></tr>
+          <tr><td>T3</td><td>11 €</td><td>550 €</td></tr>
+          <tr><td>T4</td><td>10 €</td><td>500 €</td></tr>
+          <tr><td>T5</td><td>9 €</td><td>450 €</td></tr>
+          <tr><td>T6</td><td>8 €</td><td>400 €</td></tr>
+          <tr><td>T7</td><td>7 €</td><td>350 €</td></tr>
+          <tr><td>T8</td><td>6,50 €</td><td>325 €</td></tr>
+          <tr><td>T9</td><td>6 €</td><td>300 €</td></tr>
+          <tr><td>T10</td><td>5 €</td><td>250 €</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">CESU Aidants (titres illimités, aide CSE jusqu'à 1 830 €)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>Aide/titre (15 €)</th></tr>
+          <tr><td>T1</td><td>13 €</td></tr>
+          <tr><td>T2</td><td>12 €</td></tr>
+          <tr><td>T3</td><td>11 €</td></tr>
+          <tr><td>T4</td><td>10 €</td></tr>
+          <tr><td>T5</td><td>9 €</td></tr>
+          <tr><td>T6</td><td>8 €</td></tr>
+          <tr><td>T7</td><td>7 €</td></tr>
+          <tr><td>T8</td><td>6,50 €</td></tr>
+          <tr><td>T9</td><td>6 €</td></tr>
+          <tr><td>T10</td><td>5 €</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Aide à domicile aidants (ADA / APF — max 15h/mois)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>ADA (€/h)</th><th>APF (€/h)</th></tr>
+          <tr><td>T1</td><td>20,00 €</td><td>23,00 €</td></tr>
+          <tr><td>T2</td><td>14,50 €</td><td>16,50 €</td></tr>
+          <tr><td>T3</td><td>13,00 €</td><td>15,00 €</td></tr>
+          <tr><td>T4</td><td>11,00 €</td><td>12,50 €</td></tr>
+          <tr><td>T5</td><td>9,50 €</td><td>11,00 €</td></tr>
+          <tr><td>T6</td><td>9,00 €</td><td>10,50 €</td></tr>
+          <tr><td>T7</td><td>8,00 €</td><td>9,00 €</td></tr>
+          <tr><td>T8</td><td>6,50 €</td><td>7,50 €</td></tr>
+          <tr><td>T9</td><td>5,50 €</td><td>6,50 €</td></tr>
+          <tr><td>T10</td><td>5,00 €</td><td>6,00 €</td></tr>
+        </table>
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Aide au répit aidants (par journée)</div>
+      <div class="table-wrap">
+        <table>
+          <tr><th>Tranche</th><th>Avec héberg.</th><th>Accueil jour</th><th>Hors structure</th></tr>
+          <tr><td>T1</td><td>38,50 €</td><td>23,50 €</td><td>15,00 €</td></tr>
+          <tr><td>T2</td><td>35,50 €</td><td>22,00 €</td><td>14,00 €</td></tr>
+          <tr><td>T3</td><td>32,50 €</td><td>20,00 €</td><td>12,50 €</td></tr>
+          <tr><td>T4</td><td>29,50 €</td><td>18,00 €</td><td>11,50 €</td></tr>
+          <tr><td>T5</td><td>26,00 €</td><td>16,00 €</td><td>10,50 €</td></tr>
+          <tr><td>T6</td><td>23,00 €</td><td>14,00 €</td><td>10,00 €</td></tr>
+          <tr><td>T7</td><td>20,50 €</td><td>12,50 €</td><td>9,00 €</td></tr>
+          <tr><td>T8</td><td>17,50 €</td><td>10,50 €</td><td>7,50 €</td></tr>
+          <tr><td>T9</td><td>15,00 €</td><td>9,50 €</td><td>6,50 €</td></tr>
+          <tr><td>T10</td><td>13,50 €</td><td>8,00 €</td><td>5,00 €</td></tr>
+        </table>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- CONTACTS -->
+  <div id="tab-contacts" class="tab-content">
+    <div class="section">
+      <div class="section-title">Contacts et plateformes</div>
+
+      <div class="contact-box" style="margin-bottom:10px">
+        <strong>🌐 Plateforme de commande — Up Kalidea</strong>
+        <a href="https://moncompte.up-cse.fr" target="_blank">moncompte.up-cse.fr</a><br>
+        Pour les questions de connexion : <strong>09 72 55 99 44</strong>
+      </div>
+
+      <div class="contact-box" style="margin-bottom:10px">
+        <strong>📞 Ligne information CSE Central</strong>
+        <span style="font-size:18px; font-weight:700; display:block; margin:4px 0">01 76 49 88 69</span>
+      </div>
+
+      <div class="contact-box" style="margin-bottom:10px">
+        <strong>📞 Allo Aidants (La Poste)</strong>
+        <span style="font-size:18px; font-weight:700; display:block; margin:4px 0">01 71 70 71 70</span>
+      </div>
+
+      <div class="contact-box" style="margin-bottom:10px">
+        <strong>🌐 Site d'information CSE Central</strong>
+        <a href="https://cse-laposte.fr/" target="_blank">cse-laposte.fr</a>
+      </div>
+
+      <div class="contact-box" style="margin-bottom:10px">
+        <strong>🏠 Résidence étudiante Jacques Restignat — Cachan</strong>
+        36, avenue du Président Wilson, 94230 Cachan<br>
+        Tél. : 01 84 23 22 84<br>
+        <a href="mailto:cachan_restignat@twentycampus.com">cachan_restignat@twentycampus.com</a>
+      </div>
+
+      <div class="contact-box">
+        <strong>📋 Documents à préparer pour vos demandes</strong>
+        Avis d'imposition N-1 · RIB (IBAN) · Certificats de scolarité · Livret de famille · Reconnaissance MDPH · Certificat d'aidant · Notification AEH (CAF)
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const QF_TRANCHES = [7900,10100,12000,13900,15500,17600,19700,22500,27400,Infinity];
+
+function getTranche(qf) {
+  for(let i=0;i<QF_TRANCHES.length;i++){ if(qf<=QF_TRANCHES[i]) return i; }
+  return 9;
+}
+
+function getQF() {
+  const rfr = parseFloat(document.getElementById('rfr').value)||0;
+  let parts = parseFloat(document.getElementById('parts').value)||0;
+  if(!rfr||!parts) return null;
+  const boe = document.getElementById('boe').checked?0.5:0;
+  const iso = document.getElementById('parent_isole').checked?0.5:0;
+  const aid = document.getElementById('aidant_parts').checked?0.5:0;
+  parts = parts+boe+iso+aid;
+  return rfr/parts;
+}
+
+function fmt(n){ return Math.round(n).toLocaleString('fr-FR')+' €'; }
+
+function updateQF() {
+  const qf = getQF();
+  const el = document.getElementById('qf-result');
+  if(!qf){ el.innerHTML=''; return; }
+  const t = getTranche(qf);
+  el.innerHTML=`<div class="qf-badge">QF calculé : ${Math.round(qf).toLocaleString('fr-FR')} € → Tranche ${t+1}</div>`;
+  renderResults(qf, t);
+}
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el=>el.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  const tabs = ['profil','resultats','tableau','contacts'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  if(name==='resultats'){ const qf=getQF(); if(qf) renderResults(qf,getTranche(qf)); }
+}
+
+function renderResults(qf, ti) {
+  const enf04=parseInt(document.getElementById('enf04').value)||0;
+  const enf411=parseInt(document.getElementById('enf411').value)||0;
+  const primaire=parseInt(document.getElementById('primaire').value)||0;
+  const college=parseInt(document.getElementById('college').value)||0;
+  const lycee=parseInt(document.getElementById('lycee').value)||0;
+  const etudiant=parseInt(document.getElementById('etudiant').value)||0;
+  const enf_handi=parseInt(document.getElementById('enf_handi').value)||0;
+  const nb_colo=parseInt(document.getElementById('colo').value)||0;
+  const j_colo=parseInt(document.getElementById('j_colo').value)||0;
+  const j_vac=Math.min(parseInt(document.getElementById('j_vacances').value)||0,45);
+  const est_aidant=document.getElementById('est_aidant').checked;
+  const est_boe=document.getElementById('est_boe').checked;
+  const anciennete=document.getElementById('anciennete').value;
+
+  const GARDE04=[1092,1008,924,840,756,672,588,546,504,420];
+  const GARDE411=[715,660,605,550,495,440,385,357,330,275];
+  const CV_TAUX=[50,45,41,38,35,32,29,26,23,20];
+  const VACSEJ=[650,600,600,500,500,400,400,300,300,200];
+  const COLO_TAUX=[85,78,75,71,69,67,65,63,61,59];
+  const VACENF_J=[9,8.8,8.6,8.4,7.8,7.5,7,5,3.5,3.3];
+  const PERISCO=[45,43,41,39,37,35,33,31,29,27];
+  const CESU_VQ=[13,12,11,10,9,8,7,6.5,6,5];
+  const CESU_AID=[13,12,11,10,9,8,7,6.5,6,5];
+
+  let items=[]; let total=0;
+
+  function add(cat,name,detail,amount,show=true){
+    if(!show) return;
+    items.push({cat,name,detail,amount});
+    if(amount>0) total+=amount;
+  }
+
+  if(enf04>0) add('Parentalité','Garde enfants 0-4 ans',`${enf04} enfant(s) — CESU ou remboursement facture`,GARDE04[ti]*enf04);
+  if(enf411>0) add('Parentalité','Garde enfants 4-11 ans',`${enf411} enfant(s) — CESU ou remboursement facture`,GARDE411[ti]*enf411);
+  add('Parentalité','CESU Vie Quotidienne',`50 titres × aide de ${CESU_VQ[ti]} €/titre`,50*CESU_VQ[ti]);
+  add('Parentalité','Soutien scolaire Profexpress','100% pris en charge — CP à Terminale',0);
+
+  if(ti<=1){
+    if(primaire>0) add('Scolarité','Allocation scolarité primaire',`${primaire} enfant(s) × 70 €`,70*primaire);
+    if(college>0) add('Scolarité','Allocation scolarité collège',`${college} enfant(s) × 145 €`,145*college);
+    if(lycee>0) add('Scolarité','Allocation scolarité lycée',`${lycee} enfant(s) × 175 €`,175*lycee);
+    if(etudiant>0){
+      const m=ti===0?955:870;
+      add('Scolarité','Aide scolarité étudiant',`${etudiant} étudiant(s) × ${m} €`,m*etudiant);
+    }
+  } else {
+    if(primaire+college+lycee+etudiant>0)
+      add('Scolarité','Allocations scolarité','Non éligible — QF supérieur à T2 (10 100 €)',0);
+  }
+
+  const totalEnfPeri=enf04+enf411+primaire;
+  if(totalEnfPeri>0){
+    const pct=PERISCO[ti];
+    add('Périscolarité','Aide périscolarité',`${pct}% de la facture, max ${pct} €/mois/enfant (estimation sur 12 mois)`,pct*12*totalEnfPeri);
+  }
+
+  const cvBonus=anciennete==='moins3'?0.5:0;
+  const cvTaux=CV_TAUX[ti]+cvBonus;
+  add('Vacances','Chèques-Vacances',`Abondement ${cvTaux}% sur votre épargne (max 1 200 €)`,Math.round(1200*(cvTaux/100)));
+  add('Vacances','Aide aux vacances timbrées',`${fmt(VACSEJ[ti])} max — ${CV_TAUX[ti]>=50?'55':CV_TAUX[ti]>=45?'50':CV_TAUX[ti]>=41?'45':CV_TAUX[ti]>=35?'40':'35'}% du séjour — 7 nuits minimum`,VACSEJ[ti]);
+
+  if(nb_colo>0&&j_colo>0){
+    const aide=Math.min(Math.round(j_colo*(COLO_TAUX[ti]/100)*50),1300);
+    add('Vacances','Colonies de vacances',`${nb_colo} enfant(s) × ${j_colo} j × ${COLO_TAUX[ti]}% (max 1 300 €/séjour)`,aide*nb_colo);
+  }
+  const nbEnfVac=enf04+enf411+primaire+college+lycee;
+  if(j_vac>0&&nbEnfVac>0){
+    add('Vacances','Séjour enfants accompagnés',`${nbEnfVac} enfant(s) × ${j_vac} j × ${VACENF_J[ti]} €/j`,Math.round(nbEnfVac*j_vac*VACENF_J[ti]));
+  }
+
+  if(enf_handi>0){
+    add('Handicap','Allocation enfant handicapé (<20 ans)',`${enf_handi} enfant(s) × 183 €/mois — sans condition de ressources`,183*12*enf_handi);
+    add('Handicap','Soutien aux apprentissages (handicap)','Max 600 €/an (400 € sans handicap)',600);
+    add('Handicap','Séjour centre vacances spécialisé',`30 €/j — max 45 j/an — sans condition de ressources`,30*45*enf_handi);
+  }
+
+  if(est_aidant){
+    const cesuAidAide=Math.min(Math.floor(1830/15)*CESU_AID[ti],1830);
+    add('Aidants','CESU Aidants',`Aide de ${CESU_AID[ti]} €/titre — jusqu\'à 1 830 € d\'aide/an`,cesuAidAide);
+    add('Aidants','Aide à domicile adapté (ADA)','Jusqu\'à 15h/mois — voir tableau pour le taux',0);
+    add('Aidants','Aide au répit','Jusqu\'à 12 j/an d\'hébergement de l\'aidé',0);
+    add('Aidants','Téléassistance / VSMP','Prise en charge de 15% de l\'abonnement',0);
+  }
+
+  if(est_boe){
+    add('BOE / Handicap postier','CESU Vie Quotidienne (BOE)','Titres illimités jusqu\'à 1 830 € d\'aide/an',Math.min(Math.floor(1830/15)*CESU_VQ[ti],1830));
+  }
+
+  const cats=['Parentalité','Scolarité','Périscolarité','Vacances','Handicap','Aidants','BOE / Handicap postier'];
+  let html=`<div class="results"><div class="results-header"><h2>Vos aides estimées — Tranche ${ti+1}</h2><p>QF : ${Math.round(qf).toLocaleString('fr-FR')} €</p></div>`;
+
+  cats.forEach(cat=>{
+    const catItems=items.filter(i=>i.cat===cat);
+    if(!catItems.length) return;
+    html+=`<div class="aid-cat"><div class="aid-cat-title">${cat}</div>`;
+    catItems.forEach(item=>{
+      const free=item.amount===0&&item.detail.includes('100%');
+      const na=item.amount===0&&!free;
+      html+=`<div class="aid-item">
+        <div><div class="aid-name">${item.name}</div><div class="aid-detail">${item.detail}</div></div>
+        <div class="aid-amount ${na?'na':free?'free':''}">${na?'—':free?'Gratuit':fmt(item.amount)}</div>
+      </div>`;
+    });
+    html+=`</div>`;
+  });
+
+  html+=`<div class="total-bar"><div class="label">Total annuel estimé *</div><div class="amount">${fmt(total)}</div></div></div>`;
+  html+=`<p class="disclaimer">* Estimation indicative basée sur les grilles 2026. Certaines aides sont cumulables, d'autres non. Les montants réels dépendent de vos dépenses effectives et justificatifs. Pour toute demande : <strong>01 76 49 88 69</strong> ou <a href="https://moncompte.up-cse.fr">moncompte.up-cse.fr</a></p>`;
+
+  document.getElementById('results-container').innerHTML=html;
+}
+</script>
+</body>
+</html>
