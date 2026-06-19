@@ -93,20 +93,7 @@
   <div id="__bundler_loading">Unpacking...</div>
 
 
-<div class="overlay" id="popup-overlay">
-    <div class="popup">
-      <div class="popup-icon">🤝</div>
-      <h2>Site bénévole — quelques précisions</h2>
-      <p>Ce simulateur a été créé <strong>bénévolement</strong> pour aider les postiers à mieux comprendre leurs droits ASC.</p>
-      <p>Il <strong>NE REMPLACE PAS</strong> les documents officiels du CSE Central et peut comporter des imprécisions. En cas de doute, consultez toujours la brochure officielle ou contactez le CSE.</p>
-      <div class="highlight">
-        🔒 <strong>Vos données restent sur votre appareil.</strong><br>
-        Aucune information personnelle n'est collectée, stockée ou transmise. Tous les calculs sont effectués localement dans votre navigateur.
-      </div>
-      <p style="font-size:13px; color:#a0aec0;">Ce site n'est pas affilié à La Poste ni au CSE Central. Les montants affichés sont des estimations basées sur la brochure ASC 2026.</p>
-      <button class="popup-btn" onclick="closePopup()">J'ai compris et j'accéde au simulateur →</button>
-    </div>
-  </div>
+
 
 
   <script>
@@ -118,6 +105,58 @@
         setTimeout(function() { overlay.style.display = 'none'; }, 300);
       }
     }
+
+    function injectPopup() {
+      if (document.getElementById('popup-overlay')) return;
+
+      var style = document.createElement('style');
+      style.textContent = [
+        '#popup-overlay {',
+        '  position: fixed; inset: 0; z-index: 99999;',
+        '  background: rgba(10, 20, 50, 0.72);',
+        '  backdrop-filter: blur(6px);',
+        '  display: flex; align-items: center; justify-content: center;',
+        '  padding: 16px;',
+        '}',
+        '#popup-overlay .popup {',
+        '  background: #fff; border-radius: 22px;',
+        '  padding: 32px; max-width: 520px; width: 100%;',
+        '  box-shadow: 0 30px 70px -20px rgba(10,20,50,.5);',
+        '  font-family: Manrope, system-ui, sans-serif;',
+        '}',
+        '#popup-overlay .popup-icon { font-size: 36px; margin-bottom: 12px; }',
+        '#popup-overlay h2 { font-size: 21px; font-weight: 800; color: #0E2A4F; margin: 0 0 14px; line-height: 1.25; }',
+        '#popup-overlay p { font-size: 14.5px; color: #3A4D66; line-height: 1.6; margin: 0 0 12px; }',
+        '#popup-overlay .highlight { background: #EAF1FC; border-radius: 12px; padding: 13px 16px; font-size: 13.5px; color: #0E2A4F; line-height: 1.55; margin: 14px 0 18px; }',
+        '#popup-overlay .popup-btn { display: block; width: 100%; padding: 15px 20px; border: none; border-radius: 13px; cursor: pointer; font-family: Manrope, sans-serif; font-weight: 800; font-size: 15px; background: linear-gradient(135deg,#16439A,#0F2F73); color: #fff; box-shadow: 0 10px 22px -10px rgba(22,67,154,.6); margin-top: 4px; }',
+      ].join('\n');
+      document.head.appendChild(style);
+
+      var overlay = document.createElement('div');
+      overlay.id = 'popup-overlay';
+      overlay.innerHTML = '<div class="popup">'
+        + '<div class="popup-icon">\uD83E\uDD1D</div>'
+        + '<h2>Site b\u00E9n\u00E9vole \u2014 quelques pr\u00E9cisions</h2>'
+        + '<p>Ce simulateur a \u00E9t\u00E9 cr\u00E9\u00E9 <strong>b\u00E9n\u00E9volement</strong> pour aider les postiers \u00E0 mieux comprendre leurs droits ASC.</p>'
+        + '<p>Il <strong>NE REMPLACE PAS</strong> les documents officiels du CSE Central et peut comporter des impr\u00E9cisions. En cas de doute, consultez toujours la brochure officielle ou contactez le CSE.</p>'
+        + '<div class="highlight">\uD83D\uDD12 <strong>Vos donn\u00E9es restent sur votre appareil.</strong><br>Aucune information personnelle n\u2019est collect\u00E9e, stock\u00E9e ou transmise. Tous les calculs sont effectu\u00E9s localement dans votre navigateur.</div>'
+        + '<p style="font-size:13px;color:#a0aec0;">Ce site n\u2019est pas affili\u00E9 \u00E0 La Poste ni au CSE Central. Les montants affich\u00E9s sont des estimations bas\u00E9es sur la brochure ASC 2026.</p>'
+        + '<button class="popup-btn" onclick="closePopup()">J\u2019ai compris et j\u2019acc\u00E8de au simulateur \u2192</button>'
+        + '</div>';
+      document.body.appendChild(overlay);
+    }
+
+    // Observe le DOM : injecte la popup dès que le bundler a rendu la vraie page
+    var _obs = new MutationObserver(function() {
+      if (document.body && document.querySelector('header')) {
+        injectPopup();
+        _obs.disconnect();
+      }
+    });
+    _obs.observe(document.documentElement, { childList: true, subtree: true });
+
+    // Filet de sécurité
+    window.addEventListener('load', function() { setTimeout(injectPopup, 300); });
   </script>
 
   <script>
