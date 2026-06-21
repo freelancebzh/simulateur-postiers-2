@@ -97,66 +97,110 @@
 
 
   <script>
-    function closePopup() {
-      var overlay = document.getElementById('popup-overlay');
-      if (overlay) {
-        overlay.style.opacity = '0';
-        overlay.style.transition = 'opacity .3s';
-        setTimeout(function() { overlay.style.display = 'none'; }, 300);
-      }
-    }
+    // ─── STYLES ───────────────────────────────────────────────────────────────
+    window.injectStyles = function() {
+      if (document.getElementById('cse-styles')) return;
+      var s = document.createElement('style'); s.id = 'cse-styles';
+      s.textContent = '#cse-overlay{position:fixed;inset:0;z-index:99999;background:rgba(10,20,50,.80);backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;padding:16px;transition:opacity .3s}'
+        + '#cse-overlay .cse-popup{background:#fff;border-radius:22px;padding:clamp(24px,4vw,38px);max-width:500px;width:100%;box-shadow:0 32px 80px -20px rgba(10,20,50,.55);font-family:Manrope,system-ui,sans-serif;animation:popIn .25s cubic-bezier(.34,1.56,.64,1)}'
+        + '@keyframes popIn{from{transform:scale(.92);opacity:0}to{transform:scale(1);opacity:1}}'
+        + '#cse-overlay .cse-icon{font-size:38px;margin-bottom:14px}'
+        + '#cse-overlay h2{font-size:21px;font-weight:800;color:#0E2A4F;margin:0 0 12px;line-height:1.25}'
+        + '#cse-overlay p{font-size:14.5px;color:#3A4D66;line-height:1.6;margin:0 0 12px}'
+        + '#cse-overlay .cse-highlight{background:#EAF1FC;border-radius:12px;padding:13px 16px;font-size:13.5px;color:#0E2A4F;line-height:1.55;margin:14px 0 18px}'
+        + '#cse-overlay .cse-btn{display:block;width:100%;padding:15px 20px;border:none;border-radius:13px;cursor:pointer;font-family:Manrope,sans-serif;font-weight:800;font-size:15px;background:linear-gradient(135deg,#16439A,#0F2F73);color:#fff;box-shadow:0 10px 22px -10px rgba(22,67,154,.6);margin-top:4px;transition:transform .12s}'
+        + '#cse-overlay .cse-btn:hover{transform:translateY(-1px)}'
+        + '#cse-overlay .cse-input-wrap{position:relative;margin:18px 0 6px}'
+        + '#cse-overlay .cse-input{width:100%;padding:15px 50px 15px 18px;border:1.5px solid #E4EAF3;border-radius:13px;font-size:16px;font-weight:600;color:#0E2A4F;font-family:Manrope,sans-serif;outline:none;box-sizing:border-box;letter-spacing:1px;text-transform:uppercase}'
+        + '#cse-overlay .cse-input:focus{border-color:#16439A;box-shadow:0 0 0 4px rgba(22,67,154,.1)}'
+        + '#cse-overlay .cse-badge{position:absolute;right:14px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:800;padding:4px 9px;border-radius:999px}'
+        + '#cse-overlay .cse-error{color:#C0392B;font-size:13px;font-weight:700;margin:6px 0 0;display:none}'
+        + '#cse-overlay .cse-muted{font-size:12.5px;color:#9AA7BC;margin-top:14px;text-align:center}';
+      document.head.appendChild(s);
+    };
 
-    function injectPopup() {
-      if (document.getElementById('popup-overlay')) return;
-
-      var style = document.createElement('style');
-      style.textContent = [
-        '#popup-overlay {',
-        '  position: fixed; inset: 0; z-index: 99999;',
-        '  background: rgba(10, 20, 50, 0.72);',
-        '  backdrop-filter: blur(6px);',
-        '  display: flex; align-items: center; justify-content: center;',
-        '  padding: 16px;',
-        '}',
-        '#popup-overlay .popup {',
-        '  background: #fff; border-radius: 22px;',
-        '  padding: 32px; max-width: 520px; width: 100%;',
-        '  box-shadow: 0 30px 70px -20px rgba(10,20,50,.5);',
-        '  font-family: Manrope, system-ui, sans-serif;',
-        '}',
-        '#popup-overlay .popup-icon { font-size: 36px; margin-bottom: 12px; }',
-        '#popup-overlay h2 { font-size: 21px; font-weight: 800; color: #0E2A4F; margin: 0 0 14px; line-height: 1.25; }',
-        '#popup-overlay p { font-size: 14.5px; color: #3A4D66; line-height: 1.6; margin: 0 0 12px; }',
-        '#popup-overlay .highlight { background: #EAF1FC; border-radius: 12px; padding: 13px 16px; font-size: 13.5px; color: #0E2A4F; line-height: 1.55; margin: 14px 0 18px; }',
-        '#popup-overlay .popup-btn { display: block; width: 100%; padding: 15px 20px; border: none; border-radius: 13px; cursor: pointer; font-family: Manrope, sans-serif; font-weight: 800; font-size: 15px; background: linear-gradient(135deg,#16439A,#0F2F73); color: #fff; box-shadow: 0 10px 22px -10px rgba(22,67,154,.6); margin-top: 4px; }',
-      ].join('\n');
-      document.head.appendChild(style);
-
-      var overlay = document.createElement('div');
-      overlay.id = 'popup-overlay';
-      overlay.innerHTML = '<div class="popup">'
-        + '<div class="popup-icon">\uD83E\uDD1D</div>'
-        + '<h2>Site b\u00E9n\u00E9vole \u2014 quelques pr\u00E9cisions</h2>'
-        + '<p>Ce simulateur a \u00E9t\u00E9 cr\u00E9\u00E9 <strong>b\u00E9n\u00E9volement</strong> pour aider les postiers \u00E0 mieux comprendre leurs droits ASC.</p>'
-        + '<p>Il <strong>NE REMPLACE PAS</strong> les documents officiels du CSE Central et peut comporter des impr\u00E9cisions. En cas de doute, consultez toujours la brochure officielle ou contactez le CSE.</p>'
-        + '<div class="highlight">\uD83D\uDD12 <strong>Vos donn\u00E9es restent sur votre appareil.</strong><br>Aucune information personnelle n\u2019est collect\u00E9e, stock\u00E9e ou transmise. Tous les calculs sont effectu\u00E9s localement dans votre navigateur.</div>'
-        + '<p style="font-size:13px;color:#a0aec0;">Ce site n\u2019est pas affili\u00E9 \u00E0 La Poste ni au CSE Central. Les montants affich\u00E9s sont des estimations bas\u00E9es sur la brochure ASC 2026.</p>'
-        + '<button class="popup-btn" onclick="closePopup()">J\u2019ai compris et j\u2019acc\u00E8de au simulateur \u2192</button>'
+    // ─── ÉTAPE 1 : LOGIN RH ──────────────────────────────────────────────────
+    window.showLoginPopup = function() {
+      if (document.getElementById('cse-overlay')) return;
+      window.injectStyles();
+      var o = document.createElement('div'); o.id = 'cse-overlay';
+      o.innerHTML = '<div class="cse-popup">'
+        + '<div class="cse-icon">&#127972;</div>'
+        + '<h2>Acc&egrave;s r&eacute;serv&eacute; aux agents La Poste</h2>'
+        + '<p>Ce simulateur est exclusivement destin&eacute; aux postiers et posti&egrave;res. Veuillez saisir votre <strong>identifiant RH</strong> pour acc&eacute;der.</p>'
+        + '<div class="cse-input-wrap">'
+        + '<input id="cse-rh-input" class="cse-input" type="text" maxlength="6" placeholder="ex. ABC123" autocomplete="off" spellcheck="false" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key===\'Enter\')window.validateLogin()" />'
+        + '<span class="cse-badge" id="cse-rh-badge" style="background:#EAF1FC;color:#16439A;">RH</span>'
+        + '</div>'
+        + '<div class="cse-error" id="cse-rh-error">&#9940; Ce site n\'est accessible qu\'aux postiers. L\'identifiant RH doit contenir 3 lettres puis 3 chiffres (ex. ABC123).</div>'
+        + '<button class="cse-btn" onclick="window.validateLogin()">Acc&eacute;der au simulateur &rarr;</button>'
+        + '<p class="cse-muted">Votre identifiant n\'est pas v&eacute;rifi&eacute; ni transmis. Il reste uniquement local.</p>'
         + '</div>';
-      document.body.appendChild(overlay);
-    }
+      document.body.appendChild(o);
+    };
 
-    // Observe le DOM : injecte la popup dès que le bundler a rendu la vraie page
-    var _obs = new MutationObserver(function() {
-      if (document.body && document.querySelector('header')) {
-        injectPopup();
-        _obs.disconnect();
+    window.validateLogin = function() {
+      var val = document.getElementById('cse-rh-input').value.trim();
+      var ok = /^[A-Za-z]{3}\d{3}$/.test(val);
+      var err = document.getElementById('cse-rh-error');
+      var badge = document.getElementById('cse-rh-badge');
+      if (ok) {
+        badge.style.background='#E7F4EE'; badge.style.color='#1C7A57'; badge.textContent='OK';
+        err.style.display='none';
+        var ov = document.getElementById('cse-overlay');
+        ov.style.opacity='0';
+        setTimeout(function(){ ov.remove(); window.showDisclaimerPopup(); }, 300);
+      } else {
+        err.style.display='block';
+        badge.style.background='#FDECEA'; badge.style.color='#C0392B'; badge.textContent='X';
+        var inp = document.getElementById('cse-rh-input');
+        inp.style.borderColor='#C0392B';
+        setTimeout(function(){ inp.style.borderColor=''; }, 1800);
       }
-    });
-    _obs.observe(document.documentElement, { childList: true, subtree: true });
+    };
 
-    // Filet de sécurité
-    window.addEventListener('load', function() { setTimeout(injectPopup, 300); });
+    // ─── ÉTAPE 2 : AVERTISSEMENT ─────────────────────────────────────────────
+    window.showDisclaimerPopup = function() {
+      window.injectStyles();
+      var o = document.createElement('div'); o.id = 'cse-overlay';
+      o.innerHTML = '<div class="cse-popup">'
+        + '<div class="cse-icon">&#129309;</div>'
+        + '<h2>Site b&eacute;n&eacute;vole &mdash; quelques pr&eacute;cisions</h2>'
+        + '<p>Ce simulateur a &eacute;t&eacute; cr&eacute;&eacute; <strong>b&eacute;n&eacute;volement</strong> pour aider les postiers &agrave; mieux comprendre leurs droits ASC 2026.</p>'
+        + '<p>Il <strong>NE REMPLACE PAS</strong> les documents officiels du CSE Central. En cas de doute, consultez la brochure officielle ou contactez le CSE.</p>'
+        + '<div class="cse-highlight">&#128274; <strong>Vos donn&eacute;es restent sur votre appareil.</strong><br>Aucune information personnelle n\'est collect&eacute;e, stock&eacute;e ou transmise.</div>'
+        + '<p style="font-size:13px;color:#9AA7BC;margin:0 0 6px;">Ce site n\'est pas affili&eacute; &agrave; La Poste ni au CSE Central.</p>'
+        + '<button class="cse-btn" onclick="window.closeOverlay()">J\'ai compris &rarr;</button>'
+        + '</div>';
+      document.body.appendChild(o);
+    };
+
+    window.closeOverlay = function() {
+      var o = document.getElementById('cse-overlay');
+      if (o) { o.style.opacity='0'; o.style.transition='opacity .3s'; setTimeout(function(){ o.remove(); }, 300); }
+    };
+
+    // ─── DÉCLENCHEMENT ROBUSTE ───────────────────────────────────────────────
+    window.__CSE_POPUP_NEEDED = true;
+    window.tryShowPopup = function() {
+      if (!window.__CSE_POPUP_NEEDED) return;
+      if (!document.body || !document.querySelector('header')) return;
+      if (document.getElementById('cse-overlay')) return;
+      window.__CSE_POPUP_NEEDED = false;
+      window.showLoginPopup();
+    };
+    (function() {
+      var orig = Element.prototype.replaceWith;
+      Element.prototype.replaceWith = function() {
+        orig.apply(this, arguments);
+        setTimeout(function(){ window.tryShowPopup && window.tryShowPopup(); }, 80);
+        setTimeout(function(){ window.tryShowPopup && window.tryShowPopup(); }, 600);
+      };
+    })();
+    var _obs2 = new MutationObserver(function(){ window.tryShowPopup && window.tryShowPopup(); });
+    _obs2.observe(document.documentElement, { childList: true, subtree: true });
+    window.addEventListener('load', function() { setTimeout(window.tryShowPopup, 100); setTimeout(window.tryShowPopup, 700); });
+    document.addEventListener('DOMContentLoaded', function() { setTimeout(window.tryShowPopup, 200); });
   </script>
 
   <script>
